@@ -1,6 +1,6 @@
 import numpy as np
 
-def evaluate(agent, env, num_episodes=100):
+def evaluate(agent, env, num_episodes=100, q_table=None):
     final_rewards = []
 
     for episode in range(num_episodes):
@@ -17,7 +17,7 @@ def evaluate(agent, env, num_episodes=100):
 
         while env.t < env.T:
             if agent.__class__.__name__ == 'QAgent':
-                action = agent.get_action(state)
+                np.array(np.unravel_index(q_table[state].argmax(), q_table[state].shape))
             else:
                 action = agent.get_action()
             state, action_reward, done = env.step(np.array(action))
