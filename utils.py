@@ -91,6 +91,13 @@ def single_experiment(agent_name, agent, env, show=True):
     disc_reward = 0
     state = env.state()
 
+    if agent.__class__.__name__ == 'OptimalAgent':
+        data_bid = agent.generate_optimal_depth(env=env, bid=True)
+        data_ask = agent.generate_optimal_depth(env=env, bid=False)
+        data_bid = np.nan_to_num(data_bid)
+        data_ask = np.nan_to_num(data_ask)
+        env.reset()
+
     # Experiment
     while env.t < env.T:
 
@@ -115,10 +122,13 @@ def single_experiment(agent_name, agent, env, show=True):
             if agent.__class__.__name__ == 'DecayEpsilonGreedyAgent':
                 agent.decay_epsilon()
 
+        elif agent.__class__.__name__ == 'OptimalAgent':
+            action = data_bid[state[0] + env.Q, env.t], data_ask[state[0] + env.Q, env.t]
+            state, reward, done = env.step(np.array(action))
+
         else:
             print('Undefined agent')
             return
-
     
         # Record
         disc_reward += reward  
