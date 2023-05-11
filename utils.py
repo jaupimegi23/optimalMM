@@ -1,6 +1,23 @@
 import matplotlib.pyplot as plt 
 import numpy as np
 
+class Memory:
+    def __init__(self):
+        self.actions = []
+        self.states = []
+        self.logprobs = []
+        self.rewards = []
+        self.is_terminals = []
+        self.values = []
+    
+    def clear_memory(self):
+        del self.actions[:]
+        del self.states[:]
+        del self.logprobs[:]
+        del self.rewards[:]
+        del self.is_terminals[:]
+        del self.values[:]
+
 def evaluate(agent, env, num_episodes=100, q_table=None):
     final_rewards = []
 
@@ -13,7 +30,7 @@ def evaluate(agent, env, num_episodes=100, q_table=None):
         values = []
         disc_reward = 0
 
-        env.reset()
+        _,_ = env.reset()
         state = env.state()
 
         while env.t < env.T:
@@ -96,7 +113,11 @@ def single_experiment(agent_name, agent, env, show=True):
         data_ask = agent.generate_optimal_depth(env=env, bid=False)
         data_bid = np.nan_to_num(data_bid)
         data_ask = np.nan_to_num(data_ask)
-        env.reset()
+        _,_ = env.reset()
+
+    if agent.__class__.__name__ == 'PPO':
+        state = env.reset()
+        #state = torch.from_numpy(np.array(state)).float().unsqueeze(0).to(device)
 
     # Experiment
     while env.t < env.T:
@@ -125,6 +146,12 @@ def single_experiment(agent_name, agent, env, show=True):
         elif agent.__class__.__name__ == 'OptimalAgent':
             action = data_bid[state[0] + env.Q, env.t], data_ask[state[0] + env.Q, env.t]
             state, reward, done = env.step(np.array(action))
+        
+        elif agent.__class__.__name__ == 'PPO':
+            memory = Memory()
+            #action = agent.policy_old.act(state, memory=None)
+            action = agent.policy_old.act(state, memory=memory)
+            state, reward, done = env.step(action)
 
         else:
             print('Undefined agent')
@@ -162,7 +189,7 @@ def multiple_experiment(agent_name, agent, env, num_episodes=100, q_table=None,
     # Train and run multiple episodes
     for episode in range(num_episodes):
         agent.reset()
-        env.reset()
+        _,_ = env.reset()
         log = single_experiment(agent_name+f', Episode {episode}', agent, env, show=show_each)
         logs.append(log)
         final_rewards.append(log['rewards'][-1])

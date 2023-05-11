@@ -575,6 +575,8 @@ class SimpleEnv(gym.Env):
         self.t = 0
         self.X_t = 0            # the cash process
 
+        return self.Q_t, self.t  # return initial state
+
 
     def render(self, mode='human', close=False):
         """
